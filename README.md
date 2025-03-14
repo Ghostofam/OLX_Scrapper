@@ -24,7 +24,6 @@ OLX_Bot/
 ├── scrapper.py             # Main scraper script
 ├── extracted_links.csv     # Intermediate file storing listing URLs
 ├── scrapped_data_1.csv     # Final output file with scraped data
-├── chrome_temp/            # Temporary Chrome browser data
 └── .venv/                  # Python virtual environment
 ```
 
