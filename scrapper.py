@@ -2,6 +2,7 @@ import time
 import csv
 import os
 import dotenv
+import sqlite3
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -20,6 +21,10 @@ def setup_driver():
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     return driver
+
+def connect_to_db(db_name):
+    conn = sqlite3.connect(db_name)
+    return conn
 
 def navigate_to_mobiles(driver, base_url):
     """Navigate to the Mobile Phones section on OLX."""
@@ -116,6 +121,10 @@ def link_extracter(driver, url):
                 print(f"Link {index}: {href}")
         except Exception as e:
             print(f"Link {index}: No <a> tag found in this <li>. Error: {e}")
+    
+    db_name = "olx_db"
+    conn = connect_to_db(db_name)
+    insert_links(conn, extracted_links)
             
     to_csv(extracted_links,url)
     return extracted_links
@@ -137,7 +146,8 @@ def link_open(driver,input_csv ="extracted_links.csv", output_csv="scrapped_data
             fieldnames = ["Links","Name","Price","Location","Date","Description"]
             writer = csv.DictWriter(outfile, fieldnames=fieldnames)
             writer.writeheader()
-                
+            db_name = "olx_db"
+            conn = connect_to_db(db_name)   
             for row in rows:
                 link = row["Links"]
                 print(f"Processing link: {link}")
@@ -152,10 +162,18 @@ def link_open(driver,input_csv ="extracted_links.csv", output_csv="scrapped_data
                     "Description": data["Description"]
                 })
                 print(f"Scraped data: Name={data['Name']}, Price={data['Price']},Location={data['Location']}, Date={data['Date']},Description={data['Description']}")
-
+                insert_mobile_data(
+                    conn,
+                    data["Name"],
+                    data["Price"],
+                    data["Location"],
+                    data["Date"],
+                    data["Description"],
+                    link
+                )
 def data_scrap(driver, links):
     driver.get(links)
-    wait= WebDriverWait(driver,10)
+    wait= WebDriverWait(driver,1000)
     try:
         name = driver.find_element(By.XPATH,"//h1[@class='_75bce902']").text
         print (name)
@@ -191,6 +209,33 @@ def data_scrap(driver, links):
         "Description": description
     }
 
+def insert_links(conn, links):
+    cursor = conn.cursor()
+    for link in links:
+        try:
+            # Insert each link into the Links table if it doesn't already exist
+            cursor.execute("INSERT OR IGNORE INTO Link (link_url) VALUES (?)", (link,))
+        except Exception as e:
+            print(f"Error inserting link {link}: {e}")
+    conn.commit()
+
+def insert_mobile_data(conn, name, price, location, date, description, link):
+    cursor = conn.cursor()
+    try:
+        # Clean the price to remove non-numeric characters
+        cleaned_price = int("".join(filter(str.isdigit, price))) if price != "N/A" else None
+        
+        # Insert the data into the Mobiles table
+        cursor.execute("""
+            INSERT INTO Mobiles (name, price, location, date, description, links)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (name, cleaned_price, location, date, description, link))
+        print(f"Inserted data for {name} into the Mobiles table.")
+    except Exception as e:
+        print(f"Error inserting data for {name}: {e}")
+    conn.commit()
+
+
 def main():
     dotenv.load_dotenv()
     base_url = "https://www.olx.com.pk/"
@@ -200,7 +245,6 @@ def main():
     max_price_value = os.getenv("max_price_value", "50000")
     input_csv = os.getenv("input_csv", "extracted_links.csv")
     output_csv = os.getenv("output_csv", "scrapped_data.csv")
-
     # Setup WebDriver
     driver = setup_driver()
 
