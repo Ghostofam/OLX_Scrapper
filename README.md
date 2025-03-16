@@ -24,7 +24,8 @@ OLX_Bot/
 ├── scrapper.py             # Main scraper script
 ├── olx_db                  # SQLite database file (created during execution)
 ├── extracted_links.csv     # Intermediate file storing listing URLs
-├── scrapped_data.csv       # Final output file with scraped data
+├── scrapped_data_1.csv     # Final output file with scraped data
+├── chrome_temp/            # Temporary Chrome browser data
 └── .venv/                  # Python virtual environment
 ```
 
@@ -224,8 +225,4 @@ This project is provided for educational purposes only. Use at your own risk and
 
 ## Credits and Acknowledgments
 
-This project was developed as a tool for data collection and analysis of the mobile phone market in Pakistan. It uses several open-source libraries and tools:
-
-- [Selenium](https://www.selenium.dev/) - For browser automation
-- [webdriver_manager](https://github.com/SergeyPirogov/webdriver_manager) - For ChromeDriver management
-- [python-dotenv](https://github.com/theskumar/python-dotenv) - For environment variable management 
+This project was developed as a tool for data collection and analysis of the mobile phone market in Pakistan. 
