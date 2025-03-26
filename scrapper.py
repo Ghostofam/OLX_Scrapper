@@ -11,8 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException  
-
+from selenium.common.exceptions import TimeoutException
 
 
 def setup_driver():
@@ -31,8 +30,21 @@ def navigate_to_mobiles(driver, base_url):
     driver.get(base_url)
     wait = WebDriverWait(driver, 10)
     time.sleep(20)  # Consider replacing this with explicit waits
-    mobiles = driver.find_element(By.XPATH, "//div[.//span[contains(text(),'Mobile Phones')]]/a")
-    mobiles.click()
+
+    # Find all elements matching the XPath for "Mobile Phones"
+    mobiles_elements = driver.find_elements(By.XPATH, "//div[.//span[contains(text(),'Mobile Phones')]]/a")
+
+    # Check how many elements were found
+    if len(mobiles_elements) > 1:
+        print("Two or more 'Mobile Phones' elements found. Clicking the second one.")
+        mobiles_elements[1].click()  # Click the second element
+    elif len(mobiles_elements) == 1:
+        print("Only one 'Mobile Phones' element found. Clicking the first one.")
+        mobiles_elements[0].click()  # Click the first element
+    else:
+        print("No 'Mobile Phones' elements found. Exiting...")
+        exit()
+
     print("Mobiles Clicked")
 
 def select_location(driver, province, city):
